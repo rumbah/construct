@@ -4,62 +4,62 @@ Extension 2 (ext2) used in Linux systems
 from construct import *
 
 
-Char = SLInt8
-UChar = ULInt8
-Short = SLInt16
-UShort = ULInt16
-Long = SLInt32
-ULong = ULInt32
+Char = Int8sl
+UChar = Int8ul
+Short = Int16sl
+UShort = Int16ul
+Long = Int32sl
+ULong = Int32ul
 
 def BlockPointer(name):
     return Struct(name,
-        ULong("block_number"),
-        OnDemandPointer(lambda ctx: ctx["block_number"]),
+        "block_number" / ULong,
+        "block" / OnDemandPointer(this.block_number),
     )
 
-superblock = Struct("superblock",
-    ULong('inodes_count'),
-    ULong('blocks_count'),
-    ULong('reserved_blocks_count'),
-    ULong('free_blocks_count'),
-    ULong('free_inodes_count'),
-    ULong('first_data_block'),
-    Enum(ULong('log_block_size'), 
+superblock = Struct(
+    'inodes_count' / ULong,
+    'blocks_count' / ULong,
+    'reserved_blocks_count' / ULong,
+    'free_blocks_count' / ULong,
+    'free_inodes_count' / ULong,
+    'first_data_block' / ULong,
+    'log_block_size'  / Enum(ULong,
         OneKB = 0,
         TwoKB = 1,
         FourKB = 2,
     ),
-    Long('log_frag_size'),
-    ULong('blocks_per_group'),
-    ULong('frags_per_group'),
-    ULong('inodes_per_group'),
-    ULong('mtime'),
-    ULong('wtime'),
-    UShort('mnt_count'),
-    Short('max_mnt_count'),
-    Const(UShort('magic'), 0xEF53),
-    UShort('state'),
-    UShort('errors'),
+    'log_frag_size' / Long,
+    'blocks_per_group' / ULong,
+    'frags_per_group' / ULong,
+    'inodes_per_group' / ULong,
+    'mtime' / ULong,
+    'wtime' / ULong,
+    'mnt_count' / UShort,
+    'max_mnt_count' / Short,
+    'magic' / Const(UShort, 0xEF53),
+    'state' / UShort,
+    'errors' / UShort,
     Padding(2),
-    ULong('lastcheck'),
-    ULong('checkinterval'),
-    ULong('creator_os'),
-    ULong('rev_level'),
+    'lastcheck' / ULong,
+    'checkinterval' / ULong,
+    'creator_os' / ULong,
+    'rev_level' / ULong,
     Padding(235 * 4),
 )
 
-group_descriptor = Struct("group_descriptor",
-    ULong('block_bitmap'),
-    ULong('inode_bitmap'),
-    ULong('inode_table'),
-    UShort('free_blocks_count'),
-    UShort('free_inodes_count'),
-    UShort('used_dirs_count'),
+group_descriptor = Struct(
+    'block_bitmap' / ULong,
+    'inode_bitmap' / ULong,
+    'inode_table' / ULong,
+    'free_blocks_count' / UShort,
+    'free_inodes_count' / UShort,
+    'used_dirs_count' / UShort,
     Padding(14),
 )
 
-inode = Struct("inode",
-    FlagsEnum(UShort('mode'),
+inode = Struct(
+    'mode' / FlagsEnum(UShort,
         IXOTH = 0x0001,
         IWOTH = 0x0002,
         IROTH = 0x0004,
@@ -84,33 +84,33 @@ inode = Struct("inode",
         IFSOCK = 0xA000,
         IFMT = 0xF000,
     ),
-    UShort('uid'),
-    ULong('size'),
-    ULong('atime'),
-    ULong('ctime'),
-    ULong('mtime'),
-    ULong('dtime'),
-    UShort('gid'),
-    UShort('links_count'),
-    ULong('blocks'),
-    FlagsEnum(ULong('flags'),
+    'uid' / UShort,
+    'size' / ULong,
+    'atime' / ULong,
+    'ctime' / ULong,
+    'mtime' / ULong,
+    'dtime' / ULong,
+    'gid' / UShort,
+    'links_count' / UShort,
+    'blocks' / ULong,
+    'flags' / FlagsEnum(ULong,
         SecureDelete = 0x0001,
         AllowUndelete = 0x0002,
         Compressed = 0x0004,
         Synchronous = 0x0008,
     ),
     Padding(4),
-    Array(12, ULong('blocks')),
-    ULong("indirect1_block"),
-    ULong("indirect2_block"),
-    ULong("indirect3_block"),
-    ULong('version'),
-    ULong('file_acl'),
-    ULong('dir_acl'),
-    ULong('faddr'),
-    UChar('frag'),
-    Byte('fsize'),
-    Padding(10)   ,
+    'blocks' / ULong[12],
+    "indirect1_block" / ULong,
+    "indirect2_block" / ULong,
+    "indirect3_block" / ULong,
+    'version' / ULong,
+    'file_acl' / ULong,
+    'dir_acl' / ULong,
+    'faddr' / ULong,
+    'frag' / UChar,
+    'fsize' / Byte,
+    Padding(10),
 )
 
 # special inodes
@@ -122,12 +122,12 @@ EXT2_BOOT_LOADER_INO = 5
 EXT2_UNDEL_DIR_INO = 6
 EXT2_FIRST_INO = 11 
 
-directory_record = Struct("directory_entry",
-    ULong("inode"),
-    UShort("rec_length"),
-    UShort("name_length"),
-    Field("name", lambda ctx: ctx["name_length"]),
-    Padding(lambda ctx: ctx["rec_length"] - ctx["name_length"])
+directory_record = Struct(
+    "inode" / ULong,
+    "rec_length" / UShort,
+    "name_length" / UShort,
+    "name" / Bytes(this.name_length),
+    Padding(this.rec_length - this.name_length)
 )
 
 if __name__ == "__main__":
